@@ -18,20 +18,24 @@ formatted_date = current_date.strftime("%B, %d, %Y")
 with open("tweet_content.txt", "r") as file:
     lines = file.readlines()
 
+new_lines = []
+for line in lines:
+    # Post the tweet using the read line
+    response = client.create_tweet(text=line.strip())
+
+    # Print the response
+    print(response)
+
+    # If the tweet was not successful, keep the line for the next attempt
+    if response is None or response.data["text"] != line.strip():
+        new_lines.append(line)
+
+    # Wait for 15 minutes (900 seconds) before the next tweet
+    time.sleep(900)
+
+# Write the remaining tweets back to the file
 with open("tweet_content.txt", "w") as file:
-    for line in lines:
-        # Post the tweet using the read line
-        response = client.create_tweet(text=line.strip())
-
-        # Print the response
-        print(response)
-
-        # Delete the line from the file if it was tweeted
-        if response is not None and response.data["text"] == line.strip():
-            lines.remove(line)
-
-        # Wait for 15 minutes (900 seconds) before the next tweet
-        time.sleep(900)
+    file.writelines(new_lines)
 
 # Call the keep_alive() function to keep the script running
 from keep_alive import keep_alive
